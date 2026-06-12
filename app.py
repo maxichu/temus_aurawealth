@@ -5,6 +5,7 @@
 import streamlit as st
 
 from lib import config
+from lib.llm import chat
 
 # ============================================================
 # 页面配置
@@ -58,8 +59,32 @@ if prompt := st.chat_input("Ask me anything about your wealth..."):
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # 2) 固定 Assistant 回复 / Fixed assistant reply
-    reply = "Hello, I am AuraWealth AI Advisor."
-    st.session_state.messages.append({"role": "assistant", "content": reply})
+    # 构造发送给 LLM 的消息历史
+    # Build message history for LLM
+    messages = []
+
+    for msg in st.session_state.messages:
+        messages.append(
+            {
+                "role": msg["role"],
+                "content": msg["content"],
+            }
+        )
+
+    # 调用本地 LLM 生成回复
+    # Generate response from local LLM
+    reply = chat(messages)
+
+    # 保存 Assistant 回复
+    # Save assistant response
+    st.session_state.messages.append(
+        {
+            "role": "assistant",
+            "content": reply,
+        }
+    )
+
+    # 显示 Assistant 回复
+    # Display assistant response
     with st.chat_message("assistant"):
         st.markdown(reply)
