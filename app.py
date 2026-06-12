@@ -1,14 +1,12 @@
 """AuraWealth — AI Wealth Management Platform."""
 
-"""AuraWealth — AI Wealth Management Platform."""
-
 import streamlit as st
 
 from lib import config
-from lib.llm import chat
+from lib.agents import run_agent_workflow
 
 # ============================================================
-# 页面配置
+# 页面配置 — 浏览器标签标题、图标、布局
 # Page configuration — sets browser tab title, icon, layout
 # ============================================================
 st.set_page_config(
@@ -50,41 +48,26 @@ for msg in st.session_state.messages:
 
 # ============================================================
 # 聊天输入框
-# 用户输入后立即存入 session_state 并触发 Assistant 回复
-# Chat input — user types here, message saved immediately
+# 用户输入后存入 session_state，然后运行3-Agent工作流
+# Chat input — saves user message, then runs 3-agent workflow
 # ============================================================
 if prompt := st.chat_input("Ask me anything about your wealth..."):
-    # 1) 显示用户消息 / Display user message
+    # 显示用户消息 / Display user message
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # 构造发送给 LLM 的消息历史
-    # Build message history for LLM
-    messages = []
+    # ============================================================
+    # 运行 3-Agent 顺序工作流
+    # Run 3-agent sequential workflow: Planner -> Research -> Response
+    # 中间输出（plan, research）在内部传递，不显示给用户
+    # ============================================================
+    with st.spinner("AI Advisor is thinking..."):
+        reply = run_agent_workflow(prompt)
 
-    for msg in st.session_state.messages:
-        messages.append(
-            {
-                "role": msg["role"],
-                "content": msg["content"],
-            }
-        )
-
-    # 调用本地 LLM 生成回复
-    # Generate response from local LLM
-    reply = chat(messages)
-
-    # 保存 Assistant 回复
-    # Save assistant response
-    st.session_state.messages.append(
-        {
-            "role": "assistant",
-            "content": reply,
-        }
-    )
-
-    # 显示 Assistant 回复
-    # Display assistant response
+    # 显示 Assistant 回复 / Display assistant response
     with st.chat_message("assistant"):
         st.markdown(reply)
+
+    # 保存到会话历史 / Save to session history
+    st.session_state.messages.append({"role": "assistant", "content": reply})
