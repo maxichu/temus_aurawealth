@@ -1,4 +1,4 @@
-"""AuraWealth — AI Wealth Management Platform."""
+﻿"""AuraWealth — AI Wealth Management Platform."""
 
 import streamlit as st
 
@@ -53,17 +53,21 @@ st.header("💬 AI Financial Advisor")
 # ============================================================
 # 聊天历史记录
 # Session State 用于在页面刷新前持久化消息列表
-# st.session_state.messages stores [{role, content}, ...]
+# st.session_state.user_histories stores {user: [{role, content}, ...]}, per-user
 # ============================================================
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+if "user_histories" not in st.session_state:
+    st.session_state.user_histories = {
+        "Alice": [],
+        "Bob": [],
+        "Charlie": [],
+    }
 
 # ============================================================
 # 渲染聊天历史
 # 遍历 session_state 中所有消息，按角色显示
 # Iterate all messages and render with chat bubble
 # ============================================================
-for msg in st.session_state.messages:
+for msg in st.session_state.user_histories[st.session_state.current_user]:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
@@ -74,7 +78,7 @@ for msg in st.session_state.messages:
 # ============================================================
 if prompt := st.chat_input("Ask me anything about your wealth..."):
     # 显示用户消息 / Display user message
-    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.session_state.user_histories[st.session_state.current_user].append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
@@ -91,4 +95,4 @@ if prompt := st.chat_input("Ask me anything about your wealth..."):
         st.markdown(reply)
 
     # 保存到会话历史 / Save to session history
-    st.session_state.messages.append({"role": "assistant", "content": reply})
+    st.session_state.user_histories[st.session_state.current_user].append({"role": "assistant", "content": reply})
