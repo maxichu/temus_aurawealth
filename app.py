@@ -5,6 +5,7 @@ import streamlit as st
 from lib import config
 from lib.agents import run_agent_workflow
 from lib.data import get_portfolio, format_portfolio_context
+from lib.tracing import log_trace, read_recent_traces
 
 # ============================================================
 # 页面配置 — 浏览器标签标题、图标、布局
@@ -63,6 +64,21 @@ with st.sidebar:
     if not portfolio:
         st.caption("No holdings")
 
+    # ============================================================
+    # Trace 查看器 — 显示最近 5 条用户查询
+    # Trace viewer — shows latest 5 user queries
+    # ============================================================
+    st.divider()
+    with st.expander("Trace Viewer"):
+        recent = read_recent_traces(5)
+        if recent:
+            for t in recent:
+                ts = t.get("timestamp", "")[11:16]  # 提取 HH:MM
+                st.caption(f"**{ts}** {t.get('user', '?')}")
+                st.write(t.get("query", "")[:60])
+        else:
+            st.caption("No traces yet")
+
 # ============================================================
 # 主区域标题
 # Main area title
@@ -114,6 +130,7 @@ if prompt := st.chat_input("Ask me anything about your wealth..."):
     context = format_portfolio_context(st.session_state.current_user, portfolio)
     augmented_prompt = f"{context}\n\nUser Question: {prompt}"
 
+    log_trace(st.session_state.current_user, prompt)
     with st.spinner("AI Advisor is thinking..."):
         reply = run_agent_workflow(augmented_prompt)
 
@@ -123,3 +140,4 @@ if prompt := st.chat_input("Ask me anything about your wealth..."):
 
     # 保存到会话历史 / Save to session history
     st.session_state.user_histories[st.session_state.current_user].append({"role": "assistant", "content": reply})
+
