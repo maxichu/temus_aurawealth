@@ -1,18 +1,65 @@
 """AuraWealth — AI Wealth Management Platform."""
 
+"""AuraWealth — AI Wealth Management Platform."""
+
 import streamlit as st
 
 from lib import config
 
-# Page config
+# ============================================================
+# 页面配置
+# Page configuration — sets browser tab title, icon, layout
+# ============================================================
 st.set_page_config(
     page_title=config.APP_TITLE,
-    page_icon="",
+    page_icon="💰",
     layout="wide",
 )
 
-# Title
-st.title(config.APP_TITLE)
+# ============================================================
+# 侧边栏 — 当前仅显示应用名称，后续 Feature 会扩展
+# Sidebar — currently only shows app name, will be extended
+# ============================================================
+with st.sidebar:
+    st.title(config.APP_TITLE)
+    st.caption("AI Wealth Management Platform")
 
-# Placeholder
-st.info("AuraWealth platform initialised. Features will be added during the assessment.")
+# ============================================================
+# 主区域标题
+# Main area title
+# ============================================================
+st.header("💬 AI Financial Advisor")
+
+# ============================================================
+# 聊天历史记录
+# Session State 用于在页面刷新前持久化消息列表
+# st.session_state.messages stores [{role, content}, ...]
+# ============================================================
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+# ============================================================
+# 渲染聊天历史
+# 遍历 session_state 中所有消息，按角色显示
+# Iterate all messages and render with chat bubble
+# ============================================================
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
+
+# ============================================================
+# 聊天输入框
+# 用户输入后立即存入 session_state 并触发 Assistant 回复
+# Chat input — user types here, message saved immediately
+# ============================================================
+if prompt := st.chat_input("Ask me anything about your wealth..."):
+    # 1) 显示用户消息 / Display user message
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
+
+    # 2) 固定 Assistant 回复 / Fixed assistant reply
+    reply = "Hello, I am AuraWealth AI Advisor."
+    st.session_state.messages.append({"role": "assistant", "content": reply})
+    with st.chat_message("assistant"):
+        st.markdown(reply)
