@@ -4,6 +4,7 @@ import streamlit as st
 
 from lib import config
 from lib.agents import run_agent_workflow
+from lib.data import get_portfolio, format_portfolio_context
 
 # ============================================================
 # 页面配置 — 浏览器标签标题、图标、布局
@@ -43,6 +44,24 @@ with st.sidebar:
     st.session_state.current_user = selected
 
     st.caption(f"Current user: **{selected}**")
+
+    # ============================================================
+    # 当前用户投资组合 — 展示在侧边栏，同时传递给 LLM 作为上下文
+    # Current portfolio — displayed in sidebar, passed to LLM as context
+    # ============================================================
+    st.divider()
+    st.subheader("Portfolio")
+
+    # 获取当前用户的持仓数据 / Get current user portfolio
+    portfolio = get_portfolio(st.session_state.current_user)
+
+    # 逐行显示持仓 / Display each holding as a line item
+    for symbol, value in portfolio.items():
+        st.write(f"**{symbol}**: ${value:,.0f}")
+
+    # 如果没有持仓 / Fallback for empty portfolio
+    if not portfolio:
+        st.caption("No holdings")
 
 # ============================================================
 # 主区域标题
@@ -87,8 +106,16 @@ if prompt := st.chat_input("Ask me anything about your wealth..."):
     # Run 3-agent sequential workflow: Planner -> Research -> Response
     # 中间输出（plan, research）在内部传递，不显示给用户
     # ============================================================
+    # ============================================================
+    # 构建 UI 数据上下文 — 将当前投资组合传递给 Agent 工作流
+    # Build UI data context — inject portfolio into agent workflow
+    # ============================================================
+    portfolio = get_portfolio(st.session_state.current_user)
+    context = format_portfolio_context(st.session_state.current_user, portfolio)
+    augmented_prompt = f"{context}\n\nUser Question: {prompt}"
+
     with st.spinner("AI Advisor is thinking..."):
-        reply = run_agent_workflow(prompt)
+        reply = run_agent_workflow(augmented_prompt)
 
     # 显示 Assistant 回复 / Display assistant response
     with st.chat_message("assistant"):
