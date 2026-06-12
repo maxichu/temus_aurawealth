@@ -144,8 +144,31 @@ if prompt := st.chat_input("Ask me anything about your wealth..."):
     )
 
     # 显示 Assistant 回复 / Display assistant response
+    # 显示 Assistant 回复 / Display assistant response
     with st.chat_message("assistant"):
         st.markdown(reply)
+
+        # ============================================================
+        # Explainability
+        # 中文：展示当前 AI 工作流
+        # English: Display workflow explanation
+        # ============================================================
+        with st.expander("🔍 Why did the AI answer this?"):
+            st.markdown("""
+    ### Workflow Used
+
+    1. Load current user's portfolio
+
+    2. Inject portfolio data into prompt
+
+    3. Planner Agent creates a research plan
+
+    4. Research Agent analyzes the request
+
+    5. Response Agent generates the final answer
+
+    6. Return answer to the user
+            """)
 
     # 保存到会话历史 / Save to session history
     st.session_state.user_histories[st.session_state.current_user].append({"role": "assistant", "content": reply})
