@@ -23,6 +23,27 @@ with st.sidebar:
     st.title(config.APP_TITLE)
     st.caption("AI Wealth Management Platform")
 
+    # ============================================================
+    # 用户选择器 — 当前活跃用户，后续扩展为每用户独立历史
+    # User selector — tracks active user, will drive per-user history
+    # ============================================================
+    st.divider()
+
+    # 默认当前用户为 Alice / Default active user is Alice
+    if "current_user" not in st.session_state:
+        st.session_state.current_user = "Alice"
+
+    # Radio 按钮用户切换 / Radio buttons for user switching
+    selected = st.radio(
+        "Select user",
+        ["Alice", "Bob", "Charlie"],
+        index=["Alice", "Bob", "Charlie"].index(st.session_state.current_user),
+        label_visibility="collapsed",
+    )
+    st.session_state.current_user = selected
+
+    st.caption(f"Current user: **{selected}**")
+
 # ============================================================
 # 主区域标题
 # Main area title
