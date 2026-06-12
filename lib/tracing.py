@@ -1,4 +1,4 @@
-"""基础 Trace 日志 — 记录每次用户查询 / Basic trace logging for user queries.
+﻿"""基础 Trace 日志 — 记录每次用户查询 / Basic trace logging for user queries.
 
 每个 trace 条目记录: timestamp, user, query, workflow
 存储为 logs/traces.jsonl，每行一个 JSON 对象。
@@ -13,7 +13,14 @@ from pathlib import Path
 TRACE_FILE = Path("logs/traces.jsonl")
 
 
-def log_trace(user, query, workflow="Planner->Research->Response"):
+def log_trace(
+    user,
+    query,
+    response=None,
+    workflow="Planner->Research->Response",
+    model=None,
+    latency_ms=None,
+):
     """记录一条 Trace 到 traces.jsonl。
 
     Log a trace entry to traces.jsonl.
@@ -31,7 +38,10 @@ def log_trace(user, query, workflow="Planner->Research->Response"):
         "timestamp": datetime.now().isoformat(),
         "user": user,
         "query": query,
+        "response": response,
         "workflow": workflow,
+        "model": model,
+        "latency_ms": latency_ms,
     }
 
     with open(TRACE_FILE, "a", encoding="utf-8") as f:
@@ -67,3 +77,4 @@ def read_recent_traces(n=5):
             continue
 
     return traces
+

@@ -1,6 +1,7 @@
 ﻿"""AuraWealth — AI Wealth Management Platform."""
 
 import streamlit as st
+import time
 
 from lib import config
 from lib.agents import run_agent_workflow
@@ -74,7 +75,7 @@ with st.sidebar:
         if recent:
             for t in recent:
                 ts = t.get("timestamp", "")[11:16]  # 提取 HH:MM
-                st.caption(f"**{ts}** {t.get('user', '?')}")
+                st.caption(f"**{ts}** {t.get('user', '?')}  |  {t.get('model', '?')}  |  {t.get('latency_ms', '?')}ms")
                 st.write(t.get("query", "")[:60])
         else:
             st.caption("No traces yet")
@@ -130,9 +131,17 @@ if prompt := st.chat_input("Ask me anything about your wealth..."):
     context = format_portfolio_context(st.session_state.current_user, portfolio)
     augmented_prompt = f"{context}\n\nUser Question: {prompt}"
 
-    log_trace(st.session_state.current_user, prompt)
+    start_time = time.time()
     with st.spinner("AI Advisor is thinking..."):
         reply = run_agent_workflow(augmented_prompt)
+    latency_ms = int((time.time() - start_time) * 1000)
+    log_trace(
+        user=st.session_state.current_user,
+        query=prompt,
+        response=reply,
+        model=config.OPENAI_MODEL,
+        latency_ms=latency_ms,
+    )
 
     # 显示 Assistant 回复 / Display assistant response
     with st.chat_message("assistant"):
